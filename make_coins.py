@@ -2,8 +2,18 @@ from itertools import combinations
 from collections import namedtuple
 import numpy as np
 
+## Input:
+##	coins: a list of the coins you would like to use to make change with.
+##		EX: In USD coins=[1,5,10,25]
+## Output:
+##	A dict mapping all the numbers 0-99 to a list of the coins needed to make change
+##	for that amount.
 def make_change(coins):
+	## A dict mapping all the cent values (0-99) to a list of the coins 
+	## needed to make that much change.
 	optimal_change_for_cent = {}
+	## Initialize the dict. It takes no coins to make zero cents, and only 
+	## One coin to make c cents for c in coins.
 	optimal_change_for_cent[0]=[]
 	for coin in coins:
 		optimal_change_for_cent[coin] = [coin]
@@ -15,18 +25,19 @@ def make_change(coins):
 def make_change_helper(cent, optimal_change_for_cent, coins):
 	if cent in optimal_change_for_cent:
 		return
+	## Which coin results in the least number of coins needed to make change.
 	best_coin = -1
+	## What is the least number of coins needed to make change.
 	best_coin_length = 1000
 	for coin in coins:
 		previous_amount = cent - coin
 		if previous_amount < 0:
 			continue
 		## If we don't have a value for the previous amount, fill one in
-		## TODO: I think this will never happen?
+		## This should never happen with an iterative algorithm, but
+		## This allows the algorithm to be called recursively.
 		if previous_amount not in optimal_change_for_cent:
-			# print "%s not in %s" % (previous_amount, optimal_change_for_cent)
 			make_change_helper(previous_amount, optimal_change_for_cent, coins)
-			# print "After filling: %s" % optimal_change_for_cent
 		if len(optimal_change_for_cent[previous_amount])+1 < best_coin_length:
 			best_coin = coin
 			best_coin_length = len(optimal_change_for_cent[previous_amount])+1
@@ -65,17 +76,17 @@ def check_greediness(optimal_change_dict, coins):
 
 def print_stats(results):
 	results.sort(key=lambda x: x.mean)
-	print "Lowest mean is {}".format(results[0])
+	print "\nLowest mean is {}".format(results[0:5])
 	results.sort(key=lambda x: x.median)
-	print "Lowest median is {}".format(results[0])
+	print "\nLowest median is {}".format(results[0:5])
 	results.sort(key=lambda x: x.percentile_25)
-	print "Lowest percentile_25 is {}".format(results[0])
+	print "\nLowest percentile_25 is {}".format(results[0:5])
 	results.sort(key=lambda x: x.percentile_75)
-	print "Lowest percentile_75 is {}".format(results[0])
+	print "\nLowest percentile_75 is {}".format(results[0:5])
 	results.sort(key=lambda x: x.percentile_95)
-	print "Lowest percentile_95 is {}".format(results[0])
+	print "\nLowest percentile_95 is {}".format(results[0:5])
 	results.sort(key=lambda x: x.worst)
-	print "Lowest worst is {}".format(results[0])
+	print "\nLowest worst is {}".format(results[0:5])
 
 Result = namedtuple('Result', ['coins','is_greedy', 'mean', 'stddev',
 	'median', 'percentile_25', 
@@ -84,7 +95,7 @@ results = []
 
 
 for coin_comb in combinations(range(2,100),3):
-	# we must have a 1 cent coin. Otherwise we won't be able to make change for 1c
+	# We must have a 1 cent coin. Otherwise we won't be able to make change for 1c.
 	coins = [1] + list(coin_comb) 
 	optimal_change_dict = make_change(coins)
 	is_greedy = check_greediness(optimal_change_dict, coins)
